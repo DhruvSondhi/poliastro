@@ -54,8 +54,7 @@ def func_twobody(t0, u_, k):
     x, y, z, vx, vy, vz = u_
     r3 = (x ** 2 + y ** 2 + z ** 2) ** 1.5
 
-    du = np.array([vx, vy, vz, -k * x / r3, -k * y / r3, -k * z / r3])
-    return du
+    return np.array([vx, vy, vz, -k * x / r3, -k * y / r3, -k * z / r3])
 
 
 @jit

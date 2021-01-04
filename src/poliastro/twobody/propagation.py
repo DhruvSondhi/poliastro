@@ -25,7 +25,7 @@ different propagators available at poliastro:
 import numpy as np
 from astropy import units as u
 from astropy.coordinates import CartesianDifferential, CartesianRepresentation
-from scipy.integrate import DOP853, solve_ivp
+from nbkode import DOP853
 
 from poliastro.core.propagation import (
     danby as danby_fast,
@@ -86,34 +86,39 @@ def cowell(k, r, v, tofs, rtol=1e-11, *, events=None, f=func_twobody):
     tofs = tofs.to(u.s).value
 
     u0 = np.array([x, y, z, vx, vy, vz])
+    t0 = 0
 
-    result = solve_ivp(
+    result = DOP853(
         f,
-        (0, max(tofs)),
+        t0,
         u0,
-        args=(k,),
-        rtol=rtol,
-        atol=1e-12,
-        method=DOP853,
-        dense_output=True,
-        events=events,
-    )
-    if not result.success:
-        raise RuntimeError("Integration failed")
-
-    t_end = (
-        min(result.t_events[0]) if result.t_events and len(result.t_events[0]) else None
+        params=np.array([k]),
+        # rtol=rtol,
+        # atol=1e-12,
+        # events=events,
     )
 
-    rrs = []
-    vvs = []
-    for i in range(len(tofs)):
-        t = tofs[i]
-        if t_end is not None and t > t_end:
-            t = t_end
-        y = result.sol(t)
-        rrs.append(y[:3])
-        vvs.append(y[3:])
+    # t_end = (
+    #     min(result.t_events[0]) if result.t_events and len(result.t_events[0]) else None
+    # )
+
+    # t_ = np.linspace(0, max(tofs), 100)
+    # t_solver = np.array(t_)
+
+    # rrs = []
+    # vvs = []
+    # for i in range(len(tofs)):
+    #     t = tofs[i]
+    #     if t_end is not None and t > t_end:
+    #         t = t_end
+    # t_solver , y = result.run(t_solver)
+    # rrs.append(y[:3])
+    # vvs.append(y[3:])
+
+    ts, us = solver.run(tofs)
+
+    rrs = us[:, :3]
+    vvs = us[:, 3:]
 
     return rrs * u.km, vvs * u.km / u.s
 
